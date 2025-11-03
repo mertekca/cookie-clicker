@@ -20,7 +20,7 @@ export default class TxtEngine extends Sprite {
     this.sounds = [new Sound("meow", "./TxtEngine/sounds/meow.wav")];
 
     this.triggers = [
-      new Trigger(Trigger.GREEN_FLAG, this.whenGreenFlagClicked),
+      new Trigger(Trigger.GREEN_FLAG, this.whenGreenFlagClicked.bind(this)),
     ];
 
     this.vars.ci = 15;
@@ -153,23 +153,24 @@ export default class TxtEngine extends Sprite {
     ];
   }
 
-  *writeAtAllignSizeRgb(txt, x, y, al, s, r, g, b) {
+  // instant version (no yielding)
+  writeAtAllignSizeRgb(txt, x, y, al, s, r, g, b) {
     if (this.toNumber(al) === 1) {
       this.vars.ax = x;
+    } else if (this.toNumber(al) === 2) {
+      this.vars.ax =
+        this.toNumber(x) -
+        (txt.length / 2) * (6 * this.toNumber(s)) +
+        (6 / 2) * this.toNumber(s);
     } else {
-      if (this.toNumber(al) === 2) {
-        this.vars.ax =
-          this.toNumber(x) -
-          (txt.length / 2) * (6 * this.toNumber(s)) +
-          (6 / 2) * this.toNumber(s);
-      } else {
-        this.vars.ax =
-          this.toNumber(x) - (txt.length - 1) * (6 * this.toNumber(s));
-      }
+      this.vars.ax =
+        this.toNumber(x) - (txt.length - 1) * (6 * this.toNumber(s));
     }
+
     this.vars.ax = Math.floor(
       this.toNumber(this.vars.ax) - (5 * this.toNumber(s)) / 2
     );
+
     this.penColor = Color.num(
       Math.round(this.toNumber(r)) * 65536 +
         Math.round(this.toNumber(g)) * 256 +
@@ -177,25 +178,19 @@ export default class TxtEngine extends Sprite {
     );
     this.penSize = this.toNumber(s);
     this.vars.ci = 1;
+
     for (let i = 0; i < txt.length; i++) {
-      if (
-        !(
-          this.compare(
-            this.letterOf(txt, this.vars.ci - 1),
-            this.letterOf(txt, this.toNumber(this.vars.ci) - 2)
-          ) === 0
-        )
-      ) {
-        yield* this.getChar(this.letterOf(txt, this.vars.ci - 1));
-      }
+      this.getCharSync(this.letterOf(txt, this.vars.ci - 1));
+
       if (this.compare(this.vars.c, -1) > 0) {
         this.vars.vx =
           this.toNumber(this.vars.ax) +
           (this.toNumber(this.vars.ci) - 1) * (6 * this.toNumber(s));
         this.vars.vy = this.toNumber(y) + (6 / 2) * this.toNumber(s);
         this.vars.i = 1;
-        for (let i = 0; i < 7; i++) {
-          for (let i = 0; i < 5; i++) {
+
+        for (let row = 0; row < 7; row++) {
+          for (let col = 0; col < 5; col++) {
             if (
               this.compare(Math.abs(this.toNumber(this.vars.vx)), 240) < 0 &&
               this.compare(Math.abs(this.toNumber(this.vars.vy)), 180) < 0
@@ -228,49 +223,44 @@ export default class TxtEngine extends Sprite {
             }
             this.vars.i++;
             this.vars.vx += this.toNumber(s);
-            yield;
           }
           this.vars.vx =
             this.toNumber(this.vars.ax) +
             (this.toNumber(this.vars.ci) - 1) * (6 * this.toNumber(s));
           this.vars.vy = this.toNumber(this.vars.vy) - this.toNumber(s);
-          yield;
         }
       }
       this.vars.ci++;
-      yield;
     }
   }
 
-  *getChar(c) {
+  getCharSync(c) {
     if (this.toNumber(c) === 0) {
       this.vars.c = -1;
-    } else {
-      if (this.arrayIncludes(this.vars.data, c)) {
-        this.vars.c = 1;
-        while (
-          !(
-            this.compare(this.itemOf(this.vars.data, this.vars.c - 1), c) ===
-              0 || this.compare(this.vars.c, this.vars.data.length - 1) > 0
-          )
-        ) {
-          this.vars.c++;
-          yield;
-        }
-        if (this.compare(this.vars.c, this.vars.data.length - 1) > 0) {
-          this.vars.c = 1;
-        }
-      } else {
+    } else if (this.arrayIncludes(this.vars.data, c)) {
+      this.vars.c = 1;
+      while (
+        !(
+          this.compare(this.itemOf(this.vars.data, this.vars.c - 1), c) === 0 ||
+          this.compare(this.vars.c, this.vars.data.length - 1) > 0
+        )
+      ) {
+        this.vars.c++;
+      }
+      if (this.compare(this.vars.c, this.vars.data.length - 1) > 0) {
         this.vars.c = 1;
       }
+    } else {
+      this.vars.c = 1;
     }
   }
 
-  *whenGreenFlagClicked() {
-    while (true) {
+  whenGreenFlagClicked() {
+    const draw = () => {
       this.clearPen();
+
       if (this.compare(this.stage.vars.cookies, 999.99) > 0) {
-        yield* this.writeAtAllignSizeRgb(
+        this.writeAtAllignSizeRgb(
           this.toString(this.stage.vars.cookiesFormated) + " cookies",
           0,
           155,
@@ -282,7 +272,7 @@ export default class TxtEngine extends Sprite {
         );
       } else {
         if (this.toNumber(this.stage.vars.cookiesFormated) === 1) {
-          yield* this.writeAtAllignSizeRgb(
+          this.writeAtAllignSizeRgb(
             this.toString(this.stage.vars.cookiesFormated) + " cookie",
             0,
             155,
@@ -293,7 +283,7 @@ export default class TxtEngine extends Sprite {
             0
           );
         } else {
-          yield* this.writeAtAllignSizeRgb(
+          this.writeAtAllignSizeRgb(
             this.toString(this.stage.vars.cookiesFormated) + " cookies",
             0,
             155,
@@ -305,7 +295,8 @@ export default class TxtEngine extends Sprite {
           );
         }
       }
-      yield* this.writeAtAllignSizeRgb(
+
+      this.writeAtAllignSizeRgb(
         this.toString(this.stage.vars.cpsFormated) + " cookies/second",
         0,
         130,
@@ -315,8 +306,9 @@ export default class TxtEngine extends Sprite {
         0,
         0
       );
+
       if (this.toNumber(this.stage.vars.cpFormated) === 1) {
-        yield* this.writeAtAllignSizeRgb(
+        this.writeAtAllignSizeRgb(
           this.toString(this.stage.vars.cpFormated) + " cookie/click",
           -220,
           -160,
@@ -327,7 +319,7 @@ export default class TxtEngine extends Sprite {
           0
         );
       } else {
-        yield* this.writeAtAllignSizeRgb(
+        this.writeAtAllignSizeRgb(
           this.toString(this.stage.vars.cpFormated) + " cookies/click",
           -220,
           -160,
@@ -338,7 +330,10 @@ export default class TxtEngine extends Sprite {
           0
         );
       }
-      yield;
-    }
+
+      requestAnimationFrame(draw);
+    };
+
+    requestAnimationFrame(draw);
   }
 }
