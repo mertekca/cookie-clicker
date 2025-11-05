@@ -28,9 +28,12 @@ export default class Stage extends StageBase {
     this.vars.cookies = 82;
     this.vars.cp = 1;
     this.vars.cps = 0;
-    this.vars.cookiesFormated = 82;
-    this.vars.cpsFormated = 0;
-    this.vars.cpFormated = 1;
+
+    // Formatted values as strings from the start
+    this.vars.cookiesFormated = "82";
+    this.vars.cpsFormated = "0";
+    this.vars.cpFormated = "1";
+
     this.vars.suffix = [
       " thousand",
       " million",
