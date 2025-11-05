@@ -30,7 +30,7 @@ export default class Cookie extends Sprite {
 
     this.vars.targetSize = 100;
     this.vars.size = 100;
-    this.vars.formattedNumber = 0;
+    this.vars.formattedNumber = "0"; // assumed string
     this.vars.scaled = 0;
     this.vars.powerOf1000 = 0;
     this.vars.magnitude = 0;
@@ -43,8 +43,7 @@ export default class Cookie extends Sprite {
     this.vars.size = this.vars.targetSize;
     while (true) {
       this.vars.size +=
-        (this.toNumber(this.vars.targetSize) - this.toNumber(this.vars.size)) /
-        2;
+        (this.vars.targetSize - this.vars.size) / 2;
       yield;
     }
   }
@@ -53,86 +52,72 @@ export default class Cookie extends Sprite {
     this.stage.vars.cp = 1;
     this.stage.vars.cookies = 0;
     while (true) {
-      yield* this.formatNumberDigits(
-        Math.floor(this.toNumber(this.stage.vars.cookies)),
-        4
-      );
+      // Format cookies (assume formattedNumber is a string)
+      yield* this.formatNumberDigits(Math.floor(this.stage.vars.cookies), 4);
       this.stage.vars.cookiesFormated = this.vars.formattedNumber;
-      yield* this.formatNumberDigits(
-        Math.floor(this.toNumber(this.stage.vars.cp)),
-        4
-      );
+
+      // Format cp
+      yield* this.formatNumberDigits(Math.floor(this.stage.vars.cp), 4);
       this.stage.vars.cpFormated = this.vars.formattedNumber;
-      yield* this.formatNumberDigits(
-        Math.floor(this.toNumber(this.stage.vars.cps)),
-        4
-      );
+
+      // Format cps
+      yield* this.formatNumberDigits(Math.floor(this.stage.vars.cps), 4);
       this.stage.vars.cpsFormated = this.vars.formattedNumber;
+
+      // Set display size and click behavior
       this.size = 110;
       if (this.keyPressed("space")) {
         this.vars.targetSize = 115;
         yield* this.click();
-      } else {
-        if (this.touching("mouse")) {
-          if (this.mouse.down) {
-            this.vars.targetSize = 120;
-            yield* this.click();
-          } else {
-            this.vars.targetSize = 90;
-            this.stage.vars.clicked = 0;
-          }
+      } else if (this.touching("mouse")) {
+        if (this.mouse.down) {
+          this.vars.targetSize = 120;
+          yield* this.click();
         } else {
-          this.vars.targetSize = 100;
-          if (!this.keyPressed("space")) {
-            this.stage.vars.clicked = 0;
-          }
+          this.vars.targetSize = 90;
+          this.stage.vars.clicked = 0;
+        }
+      } else {
+        this.vars.targetSize = 100;
+        if (!this.keyPressed("space")) {
+          this.stage.vars.clicked = 0;
         }
       }
-      this.size = this.toNumber(this.vars.size);
+
+      this.size = this.vars.size;
       yield;
     }
   }
 
   *click() {
-    if (this.toNumber(this.stage.vars.clicked) === 0) {
+    if (this.stage.vars.clicked === 0) {
       this.stage.vars.clicked = 1;
-      this.stage.vars.cookies += this.toNumber(this.stage.vars.cp);
+      this.stage.vars.cookies += this.stage.vars.cp;
     }
   }
 
   *formatNumberDigits(num, digits) {
-    if (this.toNumber(this.stage.vars.cookies) === Infinity) {
-      this.vars.formattedNumber = null;
+    if (this.stage.vars.cookies === Infinity) {
+      this.vars.formattedNumber = "∞"; // string assumed
     } else {
-      this.vars.magnitude = Math.floor(
-        Math.log10(this.toNumber(num) * 1.0000001 + 1)
-      );
-      this.vars.powerOf1000 = Math.floor(
-        this.toNumber(this.vars.magnitude) / 3
-      );
+      this.vars.magnitude = Math.floor(Math.log10(num * 1.0000001 + 1));
+      this.vars.powerOf1000 = Math.floor(this.vars.magnitude / 3);
+      this.vars.scaled = (num * 1.0000001) / 10 ** (this.vars.powerOf1000 * 3);
+      this.vars.digits = Math.floor(Math.log10(this.vars.scaled * 1.0000001)) + 1;
       this.vars.scaled =
-        (this.toNumber(num) * 1.0000001) /
-        10 ** (this.toNumber(this.vars.powerOf1000) * 3);
-      this.vars.digits =
-        Math.floor(Math.log10(this.toNumber(this.vars.scaled) * 1.0000001)) + 1;
-      this.vars.scaled =
-        Math.floor(
-          this.toNumber(this.vars.scaled) *
-            10 ** (this.toNumber(digits) - this.toNumber(this.vars.digits))
-        ) /
-        10 ** (this.toNumber(digits) - this.toNumber(this.vars.digits));
+        Math.floor(this.vars.scaled * 10 ** (digits - this.vars.digits)) /
+        10 ** (digits - this.vars.digits);
+      // Assume formattedNumber is already a string
       this.vars.formattedNumber =
-        this.toString(this.vars.scaled) +
-        this.toString(
-          this.itemOf(this.stage.vars.suffix, this.vars.powerOf1000 - 1)
-        );
+        this.vars.scaled +
+        this.itemOf(this.stage.vars.suffix, this.vars.powerOf1000 - 1);
     }
   }
 
   *whenGreenFlagClicked3() {
     this.stage.vars.cps = 0;
     while (true) {
-      this.stage.vars.cookies += this.toNumber(this.stage.vars.cps) / 5;
+      this.stage.vars.cookies += this.stage.vars.cps / 5;
       yield* this.wait(0.2);
       yield;
     }
