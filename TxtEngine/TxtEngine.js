@@ -153,7 +153,7 @@ export default class TxtEngine extends Sprite {
     ];
   }
 
-  // instant version (no yielding)
+  // Instant draw (no yields)
   writeAtAllignSizeRgb(txt, x, y, al, s, r, g, b) {
     if (this.toNumber(al) === 1) {
       this.vars.ax = x;
@@ -259,9 +259,14 @@ export default class TxtEngine extends Sprite {
     const draw = () => {
       this.clearPen();
 
+      // treat all formatted values as strings
+      const cookiesFormatted = this.stage.vars.cookiesFormated;
+      const cpsFormatted = this.stage.vars.cpsFormated;
+      const cpFormatted = this.stage.vars.cpFormated;
+
       if (this.compare(this.stage.vars.cookies, 999.99) > 0) {
         this.writeAtAllignSizeRgb(
-          this.toString(this.stage.vars.cookiesFormated) + " cookies",
+          cookiesFormatted + " cookies",
           0,
           155,
           2,
@@ -271,9 +276,9 @@ export default class TxtEngine extends Sprite {
           0
         );
       } else {
-        if (this.toNumber(this.stage.vars.cookiesFormated) === 1) {
+        if (this.stage.vars.cookiesFormated === "1") {
           this.writeAtAllignSizeRgb(
-            this.toString(this.stage.vars.cookiesFormated) + " cookie",
+            cookiesFormatted + " cookie",
             0,
             155,
             2,
@@ -284,7 +289,7 @@ export default class TxtEngine extends Sprite {
           );
         } else {
           this.writeAtAllignSizeRgb(
-            this.toString(this.stage.vars.cookiesFormated) + " cookies",
+            cookiesFormatted + " cookies",
             0,
             155,
             2,
@@ -297,7 +302,7 @@ export default class TxtEngine extends Sprite {
       }
 
       this.writeAtAllignSizeRgb(
-        this.toString(this.stage.vars.cpsFormated) + " cookies/second",
+        cpsFormatted + " cookies/second",
         0,
         130,
         2,
@@ -307,9 +312,9 @@ export default class TxtEngine extends Sprite {
         0
       );
 
-      if (this.toNumber(this.stage.vars.cpFormated) === 1) {
+      if (this.stage.vars.cpFormated === "1") {
         this.writeAtAllignSizeRgb(
-          this.toString(this.stage.vars.cpFormated) + " cookie/click",
+          cpFormatted + " cookie/click",
           -220,
           -160,
           1,
@@ -320,7 +325,7 @@ export default class TxtEngine extends Sprite {
         );
       } else {
         this.writeAtAllignSizeRgb(
-          this.toString(this.stage.vars.cpFormated) + " cookies/click",
+          cpFormatted + " cookies/click",
           -220,
           -160,
           1,
